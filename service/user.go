@@ -30,7 +30,6 @@ func (s *UserServiceImp) Register(ctx context.Context, user entity.User) (*int, 
 	}
 	user.Password = string(passwordHash)
 	id, err := s.userRepo.Register(ctx, user)
-
 	if err != nil {
 		return nil, err
 	}

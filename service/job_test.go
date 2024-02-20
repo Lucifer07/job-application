@@ -85,6 +85,7 @@ func TestJobServiceImp_CloseJob(t *testing.T) {
 	t.Run("should return nil if successed", func(t *testing.T) {
 		// given
 		job := entity.Job{}
+		jobId := 1
 		ctx := new(context.Context)
 		jobRepo := new(mocks.JobRepository)
 		transactor := new(mocks.Transactor)
@@ -93,7 +94,52 @@ func TestJobServiceImp_CloseJob(t *testing.T) {
 		jobRepo.On("FindJob", mock.Anything, mock.Anything).Return(job, nil)
 		jobRepo.On("CloseJob", mock.Anything, mock.Anything).Return(nil)
 		transactor.On("WithinTransaction", mock.Anything, mock.Anything).Return(nil)
-		err := jobService.CloseJob(*ctx, 1)
+		err := jobService.CloseJob(*ctx, jobId)
+		// then
 		assert.Equal(t, nil, err)
+	})
+	t.Run("should return error job not found if cant find job id", func(t *testing.T) {
+		// given
+		jobId := 1
+		ctx := new(context.Context)
+		jobRepo := new(mocks.JobRepository)
+		transactor := new(mocks.Transactor)
+		jobService := service.NewJobService(jobRepo, transactor)
+		// when
+		jobRepo.On("FindJob", mock.Anything, mock.Anything).Return(nil, nil)
+		transactor.On("WithinTransaction", mock.Anything, mock.Anything).Return(util.ErrorJobNotFound)
+		err := jobService.CloseJob(*ctx, jobId)
+		// then
+		assert.Equal(t, util.ErrorJobNotFound, err)
+	})
+
+	t.Run("should return error internal server if have problem in query when find job", func(t *testing.T) {
+		// given
+		jobId := 1
+		ctx := new(context.Context)
+		jobRepo := new(mocks.JobRepository)
+		transactor := new(mocks.Transactor)
+		jobService := service.NewJobService(jobRepo, transactor)
+		// when
+		jobRepo.On("FindJob", mock.Anything, mock.Anything).Return(nil, util.ErrorInternal)
+		transactor.On("WithinTransaction", mock.Anything, mock.Anything).Return(util.ErrorInternal)
+		err := jobService.CloseJob(*ctx, jobId)
+		// then
+		assert.Equal(t, util.ErrorInternal, err)
+	})
+	t.Run("should return error internal server if have problem in query when try to close job", func(t *testing.T) {
+		// given
+		jobId := 1
+		ctx := new(context.Context)
+		jobRepo := new(mocks.JobRepository)
+		transactor := new(mocks.Transactor)
+		jobService := service.NewJobService(jobRepo, transactor)
+		// when
+		jobRepo.On("FindJob", mock.Anything, mock.Anything).Return(nil, nil)
+		jobRepo.On("CloseJob", mock.Anything, mock.Anything).Return(util.ErrorInternal)
+		transactor.On("WithinTransaction", mock.Anything, mock.Anything).Return(util.ErrorInternal)
+		err := jobService.CloseJob(*ctx, jobId)
+		// then
+		assert.Equal(t, util.ErrorInternal, err)
 	})
 }
