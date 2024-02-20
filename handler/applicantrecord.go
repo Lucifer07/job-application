@@ -23,8 +23,8 @@ func NewApplicantHandler(ApplicantServices service.AppicantRecordService) *Appli
 func (h *ApplicantHandler) AppliedJob(ctx *gin.Context) {
 	var appRecord dto.AppliedReq
 	data := ctx.Value("data").(map[string]string)
-	userId, _ := strconv.Atoi(data["id"])
-	if userId == 0 {
+	userId, err := strconv.Atoi(data["id"])
+	if userId == 0 || err != nil {
 		ctx.Error(util.ErrorBadRequest)
 		return
 	}

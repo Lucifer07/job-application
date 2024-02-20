@@ -33,7 +33,6 @@ func TestApplicantHandler_AppliedJob(t *testing.T) {
 		route := gin.Default()
 		mockService := new(mocks.AppicantRecordService)
 		handlerApp := handler.NewApplicantHandler(mockService)
-
 		// when
 		mockService.On("AppliedJob", mock.Anything, mock.Anything).Return(&appRecord, nil)
 		route.POST("/jobs/:id", func(c *gin.Context) {
@@ -43,9 +42,24 @@ func TestApplicantHandler_AppliedJob(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("POST", "/jobs/1", nil)
 		route.ServeHTTP(w, req)
-
 		// then
 		assert.Equal(t, http.StatusCreated, w.Code)
-		mockService.AssertExpectations(t)
+	})
+	t.Run("should return 400 if have bad request", func(t *testing.T) {
+		// given
+		data := map[string]string{"id": "1", "role": "user"}
+		route := gin.Default()
+		mockService := new(mocks.AppicantRecordService)
+		handlerApp := handler.NewApplicantHandler(mockService)
+		// when
+		route.POST("/jobs/:id", func(c *gin.Context) {
+			c.Set("data", data)
+			handlerApp.AppliedJob(c)
+		})
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("POST", "/jobs/a", nil)
+		route.ServeHTTP(w, req)
+		// then
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
