@@ -19,6 +19,7 @@ type JobRepository interface {
 	SetQuota(ctx context.Context, data dto.Quota) error
 	SetExpiredDate(ctx context.Context, data dto.Expiry) error
 	FindJob(ctx context.Context, jobId int) (*entity.Job, error)
+	FindAllJob(ctx context.Context) ([]entity.Job, error)
 }
 
 func NewjobRepository(db *sql.DB) *JobRepositoryDb {
@@ -39,6 +40,25 @@ func (r *JobRepositoryDb) FindJob(ctx context.Context, jobId int) (*entity.Job, 
 	}
 
 	return &data, nil
+}
+func (r *JobRepositoryDb) FindAllJob(ctx context.Context) ([]entity.Job, error) {
+	var datas []entity.Job
+	statment := `select id,name,quota,expired_date from jobs where deleted_at is null;`
+	db := util.GetQueryRunner(ctx, r.db)
+	rows, err := db.QueryContext(ctx, statment)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var data entity.Job
+		err := rows.Scan(&data.Id, &data.Name, &data.Quota, &data.ExpiredDate)
+		if err != nil {
+			return nil, err
+		}
+		datas = append(datas, data)
+	}
+	return datas, nil
 }
 func (r *JobRepositoryDb) CreateJob(ctx context.Context, job entity.Job) (*int, error) {
 	var id int

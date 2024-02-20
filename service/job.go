@@ -18,6 +18,7 @@ type JobService interface {
 	CloseJob(ctx context.Context, jobId int) error
 	SetQuota(ctx context.Context, data dto.Quota) error
 	SetExpiredDate(ctx context.Context, data dto.Expiry) error
+	FindAllJob(ctx context.Context) ([]entity.Job, error)
 }
 
 func NewJobService(job repository.JobRepository, transaction util.Transactor) *JobServiceImp {
@@ -32,6 +33,13 @@ func (s *JobServiceImp) CreateJob(ctx context.Context, job entity.Job) (*int, er
 		return nil, err
 	}
 	return id, nil
+}
+func (s *JobServiceImp)  FindAllJob(ctx context.Context) ([]entity.Job, error){
+	data, err := s.jobRepo.FindAllJob(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 func (s *JobServiceImp) CloseJob(ctx context.Context, jobId int) error {
 	err := s.transaction.WithinTransaction(ctx, func(ctx context.Context) error {

@@ -34,6 +34,14 @@ func (h *JobHandler) CreateJob(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusCreated, response.ResponseMsg{Message: util.Success, Data: response.Id{Id: *id}})
 }
+func (h *JobHandler) FindAllJob(ctx *gin.Context) {
+	data, err := h.JobService.FindAllJob(ctx)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+	ctx.JSON(http.StatusCreated, response.ResponseMsg{Message: util.Success, Data: data})
+}
 func (h *JobHandler) CloseJob(ctx *gin.Context) {
 	paramId := ctx.Param("id")
 	jobId, err := strconv.Atoi(paramId)
