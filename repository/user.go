@@ -32,8 +32,8 @@ func (r *UserRepositoryDb) Register(ctx context.Context, user entity.User) (*int
 }
 func (r *UserRepositoryDb) Login(ctx context.Context, user entity.User) (*entity.User, error) {
 	var userData entity.User
-	statment := `select id,password from users where email=$1;`
-	err := r.db.QueryRowContext(ctx, statment, user.Email).Scan(&userData.Id, &userData.Password)
+	statment := `select id,password,role from users where email=$1;`
+	err := r.db.QueryRowContext(ctx, statment, user.Email).Scan(&userData.Id, &userData.Password, &userData.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

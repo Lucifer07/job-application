@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/response"
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/util"
@@ -20,9 +21,9 @@ func MiddlewareJWTAuthorization(c *gin.Context) {
 		return
 	}
 	claims, err := util.ParseAndVerify(token)
-	data:=make(map[string]string, 0)
-	data["id"]=claims["id"].(string)
-	data["role"]=claims["role"].(string)
+	data := make(map[string]string, 0)
+	data["id"] = strconv.Itoa(int(claims["id"].(float64)))
+	data["role"] = claims["role"].(string)
 	c.Set("data", data)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, response.ResponseMsgErr{Message: util.ErrorUnauthorized.Error()})

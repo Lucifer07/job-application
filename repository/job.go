@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/dto"
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/entity"
@@ -38,7 +39,7 @@ func (r *JobRepositoryDb) FindJob(ctx context.Context, jobId int) (*entity.Job, 
 }
 func (r *JobRepositoryDb) CreateJob(ctx context.Context, job entity.Job) (*int, error) {
 	var id int
-	statment := `insert into jobs(name,quota,expired_date)values($1,$1,$3) returning id;`
+	statment := `insert into jobs(name,quota,expired_date)values($1,$2,$3) returning id;`
 	err := r.db.QueryRowContext(ctx, statment, job.Name, job.Quota, job.ExpiredDate).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -46,11 +47,13 @@ func (r *JobRepositoryDb) CreateJob(ctx context.Context, job entity.Job) (*int, 
 	return &id, nil
 }
 func (r *JobRepositoryDb) CloseJob(ctx context.Context, jobId int) error {
-	statment := `update jobs set deleted_at=now() where id=$1 and deleted_at is not null`
+	statment := `update jobs set deleted_at=now() where id=$1`
 	_, err := r.db.ExecContext(ctx, statment, jobId)
 	if err != nil {
+		fmt.Println("kena")
 		return err
 	}
+	fmt.Println("gk err")
 	return nil
 }
 func (r *JobRepositoryDb) SetQuota(ctx context.Context, data dto.Quota) error {

@@ -33,6 +33,8 @@ func checkError(err error) response.ResponseMsgErr {
 		return response.ResponseMsgErr{StatusCode: http.StatusBadRequest, Message: util.ErrorWrongPassword.Error()}
 	case util.ErrorBadRequest:
 		return response.ResponseMsgErr{StatusCode: http.StatusBadRequest, Message: util.ErrorBadRequest.Error()}
+	case util.ErrorJobNotFound:
+		return response.ResponseMsgErr{StatusCode: http.StatusBadRequest, Message: util.ErrorJobNotFound.Error()}
 	default:
 		return response.ResponseMsgErr{StatusCode: http.StatusInternalServerError}
 	}

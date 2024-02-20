@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Authorization(c *gin.Context) {
+func AuthorizationAdmin(c *gin.Context) {
 	data := c.Value("data").(map[string]string)
 	if data["role"] != "admin" {
 		c.AbortWithStatusJSON(http.StatusForbidden, response.ResponseMsgErr{Message: util.ErrorForbidden.Error()})

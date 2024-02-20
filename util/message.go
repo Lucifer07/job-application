@@ -1,5 +1,6 @@
 package util
 
 const (
-	Success = "success"
+	Success   = "success"
+	NoContent = ""
 )
