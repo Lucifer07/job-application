@@ -10,7 +10,8 @@ import (
 )
 
 type JobServiceImp struct {
-	jobRepo repository.JobRepository
+	jobRepo     repository.JobRepository
+	transaction util.Transactor
 }
 type JobService interface {
 	CreateJob(ctx context.Context, job entity.Job) (*int, error)
@@ -19,58 +20,76 @@ type JobService interface {
 	SetExpiredDate(ctx context.Context, data dto.Expiry) error
 }
 
-func NewJobService(job repository.JobRepository) *JobServiceImp {
+func NewJobService(job repository.JobRepository, transaction util.Transactor) *JobServiceImp {
 	return &JobServiceImp{
-		jobRepo: job,
+		jobRepo:     job,
+		transaction: transaction,
 	}
 }
 func (s *JobServiceImp) CreateJob(ctx context.Context, job entity.Job) (*int, error) {
-	id,err:=s.jobRepo.CreateJob(ctx,job)
+	id, err := s.jobRepo.CreateJob(ctx, job)
 	if err != nil {
 		return nil, err
 	}
 	return id, nil
 }
 func (s *JobServiceImp) CloseJob(ctx context.Context, jobId int) error {
-	jobs,err:=s.jobRepo.FindJob(ctx,jobId)
-	if err != nil {
-		return err
-	}
-	if jobs!=nil {
-		err:=s.jobRepo.CloseJob(ctx,jobId)
+	err := s.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
+		jobs, err := s.jobRepo.FindJob(ctx, jobId)
 		if err != nil {
 			return err
 		}
-		return nil
+		if jobs != nil {
+			err := s.jobRepo.CloseJob(ctx, jobId)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		return util.ErrorJobNotFound
+	})
+	if err != nil {
+		return err
 	}
-	return util.ErrorJobNotFound
+	return nil
 }
 func (s *JobServiceImp) SetQuota(ctx context.Context, data dto.Quota) error {
-	jobs,err:=s.jobRepo.FindJob(ctx,data.Id)
-	if err != nil {
-		return err
-	}
-	if jobs!=nil {
-		err:=s.jobRepo.SetQuota(ctx,data)
+	err := s.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
+		jobs, err := s.jobRepo.FindJob(ctx, data.Id)
 		if err != nil {
 			return err
 		}
-		return nil
+		if jobs != nil {
+			err := s.jobRepo.SetQuota(ctx, data)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		return util.ErrorJobNotFound
+	})
+	if err != nil {
+		return err
 	}
-	return util.ErrorJobNotFound
+	return nil
 }
 func (s *JobServiceImp) SetExpiredDate(ctx context.Context, data dto.Expiry) error {
-	jobs,err:=s.jobRepo.FindJob(ctx,data.Id)
-	if err != nil {
-		return err
-	}
-	if jobs!=nil {
-		err:=s.jobRepo.SetExpiredDate(ctx,data)
+	err := s.transaction.WithinTransaction(ctx, func(ctx context.Context) error {
+		jobs, err := s.jobRepo.FindJob(ctx, data.Id)
 		if err != nil {
 			return err
 		}
-		return nil
+		if jobs != nil {
+			err := s.jobRepo.SetExpiredDate(ctx, data)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		return util.ErrorJobNotFound
+	})
+	if err != nil {
+		return err
 	}
-	return util.ErrorJobNotFound
+	return nil
 }
-

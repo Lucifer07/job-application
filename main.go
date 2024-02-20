@@ -20,12 +20,16 @@ func main() {
 	}
 	userRepo := repository.NewUserRepository(db)
 	helperTool := util.HelperImpl{}
-	jobRepo:=repository.NewjobRepository(db)
-	jobService:=service.NewJobService(jobRepo)
+	jobRepo := repository.NewjobRepository(db)
+	appRepo := repository.NewAppicantRecordRepository(db)
+	transactor := util.NewTransactor(db)
+	appService := service.NewAppicantRecordService(appRepo, jobRepo, transactor)
+	jobService := service.NewJobService(jobRepo, transactor)
 	userService := service.NewUserService(userRepo, &helperTool)
-	jobHandler:=handler.NewJobHandler(jobService)
+	jobHandler := handler.NewJobHandler(jobService)
 	UserHandler := handler.NewuserHandler(userService)
-	router := server.SetupServer(UserHandler,jobHandler)
+	appHandler := handler.NewApplicantHandler(appService)
+	router := server.SetupServer(UserHandler, jobHandler, appHandler)
 	if err := router.Run(":8080"); err != nil {
 		log.Println(err)
 	}

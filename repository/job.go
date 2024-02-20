@@ -7,6 +7,7 @@ import (
 
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/dto"
 	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/entity"
+	"git.garena.com/sea-labs-id/bootcamp/batch-03/maulana-jaelani/exercise-job-application-rest-api/util"
 )
 
 type JobRepositoryDb struct {
@@ -27,14 +28,16 @@ func NewjobRepository(db *sql.DB) *JobRepositoryDb {
 }
 func (r *JobRepositoryDb) FindJob(ctx context.Context, jobId int) (*entity.Job, error) {
 	var data entity.Job
-	statment := `select id,name,quota,expired_date from jobs where deleted_at is null and id =$1;`
-	err := r.db.QueryRowContext(ctx, statment, jobId).Scan(&data.Id, &data.Name, &data.Quota, &data.ExpiredDate)
+	statment := `select id,name,quota,expired_date from jobs where deleted_at is null and id =$1 for update;`
+	db := util.GetQueryRunner(ctx, r.db)
+	err := db.QueryRowContext(ctx, statment, jobId).Scan(&data.Id, &data.Name, &data.Quota, &data.ExpiredDate)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
+
 	return &data, nil
 }
 func (r *JobRepositoryDb) CreateJob(ctx context.Context, job entity.Job) (*int, error) {
@@ -66,7 +69,8 @@ func (r *JobRepositoryDb) SetQuota(ctx context.Context, data dto.Quota) error {
 }
 func (r *JobRepositoryDb) SetExpiredDate(ctx context.Context, data dto.Expiry) error {
 	statment := `update jobs set expired_date=$1 where id=$2 and deleted_at is null`
-	_, err := r.db.ExecContext(ctx, statment, data.ExpiredDate, data.Id)
+	db := util.GetQueryRunner(ctx, r.db)
+	_, err := db.ExecContext(ctx, statment, data.ExpiredDate, data.Id)
 	if err != nil {
 		return err
 	}

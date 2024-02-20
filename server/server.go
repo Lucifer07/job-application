@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupServer(handlerUser *handler.UserHandler, handlerJob *handler.JobHandler) *gin.Engine {
+func SetupServer(handlerUser *handler.UserHandler, handlerJob *handler.JobHandler, handlerapplied *handler.ApplicantHandler) *gin.Engine {
 	router := gin.Default()
 	router.ContextWithFallback = true
 	router.Use(middleware.CustomMiddlewareError)
@@ -19,5 +19,9 @@ func SetupServer(handlerUser *handler.UserHandler, handlerJob *handler.JobHandle
 	routeAdminJob.PATCH("/quota", handlerJob.SetQuota)
 	routeAdminJob.PATCH("/expired-date", handlerJob.SetExpiredDate)
 	routeAdminJob.DELETE("/:id", handlerJob.CloseJob)
+	userRoute := router.Group("/user")
+	userRoute.Use(middleware.MiddlewareJWTAuthorization, middleware.AuthorizationUser)
+	routeuserJob := userRoute.Group("/jobs")
+	routeuserJob.POST("/:id", handlerapplied.AppliedJob)
 	return router
 }
